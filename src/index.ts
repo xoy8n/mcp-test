@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { ConvertWebpTool } from "./convert-webp.js";
+
+// Parse command line arguments
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const params: Record<string, string> = {};
+
+  for (const arg of args) {
+    if (arg.startsWith("--") || arg.startsWith("—")) {
+      const [key, value] = arg.replace(/^(-{1,2}|—)/, "").split("=");
+      if (key && value) {
+        params[key] = value.replace(/^["'](.*)["']$/, "$1");
+      }
+    }
+  }
+
+  return params;
+}
+
+const params = parseArgs();
+const API_KEY = params.API_KEY || process.env.API_KEY;
+
+console.error(`Server initialized in Docker environment`);
+
+const server = new McpServer({
+  name: "webp-convert-mcp",
+  version: "1.0.0",
+});
+
+// Register tools
+new ConvertWebpTool(API_KEY, params).register(server);
+
+async function runServer() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("MCP Server running on stdio");
+}
+
+runServer().catch((error) => {
+  console.error("Fatal error running server:", error);
+  process.exit(1);
+});
