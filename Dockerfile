@@ -11,4 +11,3 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 ENTRYPOINT ["node", "dist/index.js"]
-CMD ["node", "dist/index.js"]
