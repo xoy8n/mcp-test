@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { convertToWebP } from "./convert.js";
+import * as path from "path";
 
 // 서버 초기화
 const server = new McpServer({
@@ -19,15 +20,18 @@ server.tool(
     quality: z.number().default(80),
     lossless: z.boolean().default(false),
     keep_original: z.boolean().default(false),
+    base_path: z.string().optional(),
   },
   async (params) => {
     const imagePath = params.image_path.replace(/^"|"$/g, "");
+    const basePath = params.base_path || process.cwd();
 
     const result = await convertToWebP(
       imagePath,
       params.quality,
       params.lossless,
-      params.keep_original
+      params.keep_original,
+      basePath
     );
     return {
       content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -42,9 +46,12 @@ server.tool(
     quality: z.number().default(80),
     lossless: z.boolean().default(false),
     keep_original: z.boolean().default(false),
+    base_path: z.string().optional(),
   },
   async (params) => {
     const results = [];
+    const basePath = params.base_path || process.cwd();
+
     for (const path of params.image_paths) {
       const imagePath = path.replace(/^"|"$/g, "");
 
@@ -52,7 +59,8 @@ server.tool(
         imagePath,
         params.quality,
         params.lossless,
-        params.keep_original
+        params.keep_original,
+        basePath
       );
       results.push(result);
     }
