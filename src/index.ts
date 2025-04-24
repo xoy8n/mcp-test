@@ -2,46 +2,69 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+import { convertToWebP } from "./convert.js";
 
-import { ConvertWebpTool } from "./convert-webp.js";
-
-// Parse command line arguments
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const params: Record<string, string> = {};
-
-  for (const arg of args) {
-    if (arg.startsWith("--") || arg.startsWith("—")) {
-      const [key, value] = arg.replace(/^(-{1,2}|—)/, "").split("=");
-      if (key && value) {
-        params[key] = value.replace(/^["'](.*)["']$/, "$1");
-      }
-    }
-  }
-
-  return params;
-}
-
-const params = parseArgs();
-const API_KEY = params.API_KEY || process.env.API_KEY;
-
-console.error(`Server initialized in Docker environment`);
-
+// 서버 초기화
 const server = new McpServer({
-  name: "mcp-test",
-  version: "1.0.1",
+  name: "convert_webp",
+  version: "1.0.3",
 });
 
-// Register tools
-new ConvertWebpTool(API_KEY, params).register(server);
+// 도구 정의
+server.tool(
+  "convert_to_webp",
+  {
+    image_path: z.string(),
+    quality: z.number().default(80),
+    lossless: z.boolean().default(false),
+    keep_original: z.boolean().default(false),
+  },
+  async (params) => {
+    const imagePath = params.image_path.replace(/^"|"$/g, "");
 
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("MCP Server running on stdio");
-}
+    const result = await convertToWebP(
+      imagePath,
+      params.quality,
+      params.lossless,
+      params.keep_original
+    );
+    return {
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
 
-runServer().catch((error) => {
-  console.error("Fatal error running server:", error);
+server.tool(
+  "batch_convert_to_webp",
+  {
+    image_paths: z.array(z.string()),
+    quality: z.number().default(80),
+    lossless: z.boolean().default(false),
+    keep_original: z.boolean().default(false),
+  },
+  async (params) => {
+    const results = [];
+    for (const path of params.image_paths) {
+      const imagePath = path.replace(/^"|"$/g, "");
+
+      const result = await convertToWebP(
+        imagePath,
+        params.quality,
+        params.lossless,
+        params.keep_original
+      );
+      results.push(result);
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
+    };
+  }
+);
+
+// 서버 시작
+const transport = new StdioServerTransport();
+server.connect(transport).catch((error) => {
+  console.error("서버 연결 오류:", error);
   process.exit(1);
 });
