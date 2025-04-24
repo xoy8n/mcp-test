@@ -20,7 +20,7 @@ server.tool(
     quality: z.number().default(80),
     lossless: z.boolean().default(false),
     keep_original: z.boolean().default(false),
-    base_path: z.string().optional(),
+    base_path: z.string(),
   },
   async (params) => {
     const imagePath = params.image_path.replace(/^"|"$/g, "");

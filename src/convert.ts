@@ -14,9 +14,7 @@ export async function convertToWebP(
 ): Promise<any> {
   try {
     // 상대 경로를 절대 경로로 변환
-    const absolutePath = path.isAbsolute(imagePath)
-      ? imagePath
-      : path.resolve(basePath, imagePath);
+    const absolutePath = path.resolve(basePath, imagePath);
 
     // 입력 파일이 존재하는지 확인
     if (!fs.existsSync(absolutePath)) {
