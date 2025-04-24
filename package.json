@@ -1,10 +1,10 @@
 {
-  "name": "webp-convert-mcp",
+  "name": "@xoy8n/mcp-test",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "webp-convert-mcp": "dist/index.js"
+    "mcp-test": "dist/index.js"
   },
   "files": [
     "dist"

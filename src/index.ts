@@ -28,8 +28,8 @@ const API_KEY = params.API_KEY || process.env.API_KEY;
 console.error(`Server initialized in Docker environment`);
 
 const server = new McpServer({
-  name: "webp-convert-mcp",
-  version: "1.0.0",
+  name: "mcp-test",
+  version: "1.0.1",
 });
 
 // Register tools
